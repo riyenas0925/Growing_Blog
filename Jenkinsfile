@@ -7,7 +7,7 @@ pipeline {
         SONARQUBE_INSTALLATION_NAME = 'SonarQube Server'
         DOCKER_IMAGE = ''
         DOCKERHUB_CREDENTIAL = 'dockerhub'
-        DOCKER_REGISTRY_URL = 'https://registry.hub.docker.com'
+        DOCKER_REGISTRY_URL = ''
     }
 
     stages {
