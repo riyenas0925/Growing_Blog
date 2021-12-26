@@ -7,7 +7,6 @@ pipeline {
         SONARQUBE_INSTALLATION_NAME = 'SonarQube Server'
         DOCKER_IMAGE = ''
         DOCKERHUB_CREDENTIAL = 'dockerhub'
-        DOCKER_REGISTRY_URL = 'https://registry.hub.docker.com'
     }
 
     stages {
@@ -84,7 +83,7 @@ pipeline {
             }
             steps {
                 script {
-                    docker.withRegistry(DOCKER_REGISTRY_URL, DOCKERHUB_CREDENTIAL) {
+                    docker.withRegistry('', DOCKERHUB_CREDENTIAL) {
                         DOCKER_IMAGE.push('$BUILD_NUMBER')
                         DOCKER_IMAGE.push('latest')
                     }
