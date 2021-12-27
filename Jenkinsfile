@@ -78,7 +78,6 @@ pipeline {
             when {
                 anyOf {
                     branch 'develop'
-                    branch 'main'
                 }
             }
             steps {
@@ -95,12 +94,38 @@ pipeline {
             when {
                 anyOf {
                     branch 'develop'
-                    branch 'main'
                 }
             }
             steps {
                 sh 'docker rmi $IMAGE_NAME:$BUILD_NUMBER'
                 sh 'docker rmi $IMAGE_NAME:latest'
+            }
+        }
+
+        stage('Deploy') {
+            when {
+                anyOf {
+                    branch 'develop'
+                }
+            }
+            steps([$class: 'BapSshPromotionPublisherPlugin']) {
+                sshPublisher(
+                    continueOnError: false, failOnError: true,
+                    publishers: [
+                        sshPublisherDesc(
+                            configName: 'growing-spring-server-1',
+                            verbose: true,
+                            transfers: [
+                                sshTransfer(
+                                    sourceFiles: '',
+                                    removePrefix: '',
+                                    remoteDirectory: '',
+                                    execCommand: 'docker run -p 8080:8080 riyenas0925/growing_spring'
+                                )
+                            ]
+                        )
+                    ]
+                )
             }
         }
     }
