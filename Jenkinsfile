@@ -16,12 +16,23 @@ pipeline {
                 sh './gradlew clean build --exclude-task test'
                 stash(name: 'build-artifacts', includes: '**/build/libs/*.jar')
             }
+            post {
+                success {
+                    archiveArtifacts 'build/libs/*.jar'
+                }
+            }
         }
 
         stage('Unit Test') {
             steps {
                 sh './gradlew test'
                 stash(name: 'test-artifacts', includes: '**/build/test-results/test/TEST-*.xml')
+            }
+            post {
+                always {
+                    junit '**/build/test-results/test/TEST-*.xml'
+                    step([$class: 'JacocoPublisher'])
+                }
             }
         }
 
@@ -49,23 +60,7 @@ pipeline {
             }
         }
 
-        stage('Report & Publish') {
-            steps {
-                unstash 'build-artifacts'
-                unstash 'test-artifacts'
-                junit '**/build/test-results/test/TEST-*.xml'
-                step([$class: 'JacocoPublisher'])
-                archiveArtifacts 'build/libs/*.jar'
-            }
-        }
-
         stage('Build Docker Image') {
-            when {
-                anyOf {
-                    branch 'develop'
-                    branch 'main'
-                }
-            }
             steps {
                 unstash 'build-artifacts'
                 script {
@@ -75,11 +70,6 @@ pipeline {
         }
 
         stage('Push Docker Image') {
-            when {
-                anyOf {
-                    branch 'develop'
-                }
-            }
             steps {
                 script {
                     docker.withRegistry('', DOCKERHUB_CREDENTIAL) {
@@ -91,11 +81,6 @@ pipeline {
         }
 
         stage('Remove Unused Docker Image') {
-            when {
-                anyOf {
-                    branch 'develop'
-                }
-            }
             steps {
                 sh 'docker rmi $IMAGE_NAME:$BUILD_NUMBER'
                 sh 'docker rmi $IMAGE_NAME:latest'
@@ -103,11 +88,6 @@ pipeline {
         }
 
         stage('Deploy') {
-            when {
-                anyOf {
-                    branch 'develop'
-                }
-            }
             steps([$class: 'BapSshPromotionPublisherPlugin']) {
                 sshPublisher(
                     continueOnError: false, failOnError: true,
