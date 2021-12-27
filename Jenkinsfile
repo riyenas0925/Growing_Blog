@@ -61,6 +61,9 @@ pipeline {
         }
 
         stage('Build Docker Image') {
+            when {
+                branch 'develop'
+            }
             steps {
                 unstash 'build-artifacts'
                 script {
@@ -70,6 +73,9 @@ pipeline {
         }
 
         stage('Push Docker Image') {
+            when {
+                branch 'develop'
+            }
             steps {
                 script {
                     docker.withRegistry('', DOCKERHUB_CREDENTIAL) {
@@ -81,6 +87,9 @@ pipeline {
         }
 
         stage('Remove Unused Docker Image') {
+            when {
+                branch 'develop'
+            }
             steps {
                 sh 'docker rmi $IMAGE_NAME:$BUILD_NUMBER'
                 sh 'docker rmi $IMAGE_NAME:latest'
@@ -88,6 +97,9 @@ pipeline {
         }
 
         stage('Deploy') {
+            when {
+                branch 'develop'
+            }
             steps([$class: 'BapSshPromotionPublisherPlugin']) {
                 sshPublisher(
                     continueOnError: false, failOnError: true,
@@ -100,7 +112,7 @@ pipeline {
                                     sourceFiles: '',
                                     removePrefix: '',
                                     remoteDirectory: '',
-                                    execCommand: 'docker run -p 8080:8080 riyenas0925/growing_spring'
+                                    execCommand: 'sh ~/deploy.sh'
                                 )
                             ]
                         )
